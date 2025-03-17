@@ -97,6 +97,6 @@ def display_solution(solution):
             print(" ".join("Q" if cell else "." for cell in row))
 
 
-n = 4
+n = 10
 solution = solve_n_queens(n)
 display_solution(solution)
