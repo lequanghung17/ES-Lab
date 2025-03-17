@@ -107,4 +107,4 @@ print_solution(solution)
 #   variables: danh sách các biến để add theo format AMO
 #   next_aux_var: biến ID tiếp theo để cấp phát các biến phụ.
 #   RETURN: trả về next_aux_var_updated: giá trị next_aux_var sau khi cấp phát các biến phụ.
-#   n = 8 error
+#   n = 8 error  
