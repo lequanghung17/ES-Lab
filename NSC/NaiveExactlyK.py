@@ -19,3 +19,12 @@ def Naive_ExactlyK(n,k):
     Naive_ALK(n,k)
     Naive_AMK(n,k)
 
+n = [1,2,3,4,5,6,7,8,9,10]
+k = 6
+Naive_ExactlyK(n,k)
+if solver.solve():
+    model = solver.get_model()
+    print(model[:len(n)])
+else:
+    print("can't")
+

@@ -105,6 +105,7 @@ def NQueen_constraint(clauses, variables, start, n, k):
     return clauses, start
 
 def solve_n_queens(n,k):
+    k = 1
     variables = generate_variables(n)
     start = variables[-1][-1]
     clauses, start = NQueen_constraint(clauses, variables, start, n, k)
