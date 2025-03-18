@@ -107,7 +107,7 @@ def NQueen_constraint(clauses, variables, start, n, k):
 def solve_n_queens(n,k):
     variables = generate_variables(n)
     start = variables[-1][-1]
-    clauses, start = NQueen_constraint(n, variables, start)
+    clauses, start = NQueen_constraint(clauses, variables, start, n, k)
 
     solver = Glucose3()
     for clause in clauses:
@@ -130,6 +130,7 @@ def print_solution(solution):
 
 n = 4
 k = 1
+
 solution = solve_n_queens(n,k)
 print_solution(solution)
 
