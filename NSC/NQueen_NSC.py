@@ -13,36 +13,37 @@ def AtLeastK(clauses, variables, start, k):
     start = extravariables[-1][-1]
     
     # 1. X_i → R_{i,1}  ⇔  ¬X_i ∨ R_{i,1}
-    for i in range(1, len(variables) - 1):
-        clauses.append([-variables[i], extravariables[i - 1][0]])
+    for i in range(len(variables) - 1):
+        clauses.append([-variables[i], extravariables[i][0]])
 
     # 2. R_{i-1,j} → R_{i,j}  ⇔  ¬R_{i-1,j} ∨ R_{i,j}
-    for i in range(2, len(variables) - 1):
-        for j in range(min(i - 1, k)):
-            clauses.append([-extravariables[i - 2][j], extravariables[i - 1][j]])
+    for i in range(1, len(variables) - 1):
+        for j in range(min(i, k)):
+            clauses.append([-extravariables[i - 1][j], extravariables[i][j]])
     
     # 3. X_i ∧ R_{i-1,j-1} → R_{i,j}  ⇔  ¬X_i ∨ ¬R_{i-1,j-1} ∨ R_{i,j}
-    for i in range(2, len(variables) - 1):
-        for j in range(1, min(i, k)):
-            clauses.append([-variables[i], -extravariables[i - 2][j - 1], extravariables[i - 1][j]])
+    for i in range(1, len(variables) - 1):
+        for j in range(1, min(i + 1, k)):
+            clauses.append([-variables[i], -extravariables[i - 1][j - 1], extravariables[i][j]])
     
     # 4. ¬X_i ∧ ¬R_{i-1,j} → ¬R_{i,j}  ⇔  X_i ∨ R_{i-1,j} ∨ ¬R_{i,j}
-    for i in range(2, len(variables) - 1):
-        for j in range(min(i - 1, k)):
-            clauses.append([variables[i], extravariables[i - 2][j], -extravariables[i - 1][j]])
+    for i in range(1, len(variables) - 1):
+        for j in range(min(i, k)):
+            clauses.append([variables[i], extravariables[i - 1][j], -extravariables[i][j]])
     
     # 5. ¬X_i → ¬R_{i,i}  ⇔  X_i ∨ ¬R_{i,i}
-    for i in range(1, k + 1):
-        clauses.append([variables[i], -extravariables[i - 1][i - 1]])
+    for i in range(k):
+        clauses.append([variables[i], -extravariables[i][i]])
     
-    # 6. ¬R_{i-1,j-1} → ¬R_{i,j}  ⇔  R_{i-1,j-1} ∨ ¬R_{i,j}
-    for i in range(2, len(variables) - 1):
-        for j in range(1, min(i,k)):
-            clauses.append([extravariables[i - 2][j - 1], -extravariables[i - 1][j]])
+   # 6. ¬R_{i-1,j-1} → ¬R_{i,j}  ⇔  R_{i-1,j-1} ∨ ¬R_{i,j}
+    for i in range(1, len(variables) - 1):
+        for j in range(1, min(i + 1,k)):
+            clauses.append([extravariables[i - 1][j - 1], -extravariables[i][j]])
     
     # 7. R_{n-1,k} ∨ (X_n ∧ R_{n-1,k-1})  ⇔  R_{n-1,k} ∨ X_n ^ R_{n-1,k} ∨ R_{n-1,k-1}
-    clauses.append([extravariables[len(variables) - 3][k - 1], variables[len(variables) - 1]])
-    clauses.append([extravariables[len(variables) - 3][k - 1], extravariables[len(variables) - 3][k -2]])
+    clauses.append([extravariables[len(variables) - 2][k - 1], variables[len(variables) - 1]])
+    if k - 2 >= 0:
+        clauses.append([extravariables[len(variables) - 2][k - 1], extravariables[len(variables) - 2][k - 2]])
 
     return clauses, start
 
@@ -52,22 +53,22 @@ def AtMostK(clauses, variables, start, k):
     start = extravariables[-1][-1]
 
     # 1. X_i → R_{i,1}  ⇔  ¬X_i ∨ R_{i,1}
-    for i in range(1, len(variables) - 1):
-        clauses.append([-variables[i], extravariables[i - 1][0]])
+    for i in range(len(variables) - 1):
+        clauses.append([-variables[i], extravariables[i][0]])
 
     # 2. R_{i-1,j} → R_{i,j}  ⇔  ¬R_{i-1,j} ∨ R_{i,j}
-    for i in range(2, len(variables) - 1):
-        for j in range(min(i - 1, k)):
-            clauses.append([-extravariables[i - 2][j], extravariables[i - 1][j]])
+    for i in range(1, len(variables) - 1):
+        for j in range(min(i, k)):
+            clauses.append([-extravariables[i - 1][j], extravariables[i][j]])
     
     # 3. X_i ∧ R_{i-1,j-1} → R_{i,j}  ⇔  ¬X_i ∨ ¬R_{i-1,j-1} ∨ R_{i,j}
-    for i in range(2, len(variables) - 1):
-        for j in range(1, min(i, k)):
-            clauses.append([-variables[i], -extravariables[i - 2][j - 1], extravariables[i - 1][j]])
+    for i in range(1, len(variables) - 1):
+        for j in range(1, min(i + 1, k)):
+            clauses.append([-variables[i], -extravariables[i - 1][j - 1], extravariables[i][j]])
     
     # 8. X_i → ¬R_{i-1,k}  ⇔  ¬X_i ∨ ¬R_{i-1,k}
-    for i in range(k + 1, len(variables)):
-        clauses.append([-variables[i], -extravariables[i - 2][k - 1]])
+    for i in range(k, len(variables)):
+        clauses.append([-variables[i], -extravariables[i - 1][k - 1]])
     
     return clauses, start
 
@@ -122,7 +123,7 @@ def solve_n_queens(n):
 
 
 def print_solution(solution):
-    if solution is None:
+    if solution is None: 
         print("No solution found.")
     else:
         for row in solution:
