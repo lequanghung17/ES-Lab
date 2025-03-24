@@ -26,5 +26,5 @@ if solver.solve():
     model = solver.get_model()
     print(model[:len(n)])
 else:
-    print("can't")
+    print("No result found")
 
