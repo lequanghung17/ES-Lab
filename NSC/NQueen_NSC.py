@@ -4,7 +4,7 @@ from pysat.solvers import Glucose3
 def generate_variables(n):
     return [[i * n + j + 1 for j in range(n)] for i in range(n)]
 def generate_extra_variables(k, n, start):
-    return [[i*k + j + 1 + start for j in range(k)] for i in range(n - 2)]
+    return [[i*k + j + 1 + start for j in range(k)] for i in range(n - 1)]
 
 def AtLeastK(clauses, variables, start, k):
 
@@ -71,26 +71,25 @@ def AtMostK(clauses, variables, start, k):
     
     return clauses, start
 
-def ExactlyK (clauses, variables, start,k): # K = 1
+def ExactlyK (clauses, variables, start): # K = 1
 
     #with Nqueen, k = 1
-    k = 1
-    clauses, start = AtLeastK(clauses, variables, start, k)
-    clauses, start = AtMostK(clauses, variables, start, k)
+    clauses, start = AtLeastK(clauses, variables, start, 1)
+    clauses, start = AtMostK(clauses, variables, start, 1)
     return clauses, start
 
 
-def NQueen_constraint(clauses, variables, start, n, k):
+def NQueen_constraint(n, variables, start):
 
     clauses = []
 
     # constraint 1:
     for i in range(n):
-        clauses, start = ExactlyK(clauses, variables[i], start,k)
+        clauses, start = ExactlyK(clauses, variables[i], start)
 
     # constraint 2:
     for j in range(n):
-        clauses, start = ExactlyK(clauses, [variables[i][j] for i in range(n)], start,k)
+        clauses, start = ExactlyK(clauses, [variables[i][j] for i in range(n)], start)
 
 
     # constraint 3:
@@ -98,17 +97,18 @@ def NQueen_constraint(clauses, variables, start, n, k):
         for j in range(n):
             for h in range(1, n):
                 if i + h < n and j + h < n:
-                    clauses, start = AtMostK(clauses, [variables[i][j], variables[i + k][j + k]], start, 1)
+                    clauses, start = AtMostK(clauses, [variables[i][j], variables[i + h][j + h]], start, 1)
                 if i + h < n and j - h >= 0:
-                    clauses, start = AtMostK(clauses, [variables[i][j], variables[i + k][j - k]], start, 1)
+                    clauses, start = AtMostK(clauses, [variables[i][j], variables[i + h][j - h]], start, 1)
 
     return clauses, start
 
-def solve_n_queens(n,k):
-    k = 1
+def solve_n_queens(n):
+    
+    
     variables = generate_variables(n)
     start = variables[-1][-1]
-    clauses, start = NQueen_constraint(clauses, variables, start, n, k)
+    clauses, start = NQueen_constraint(n, variables, start)
 
     solver = Glucose3()
     for clause in clauses:
@@ -130,9 +130,10 @@ def print_solution(solution):
 
 
 n = 4
-k = 1
 
-solution = solve_n_queens(n,k)
+
+
+solution = solve_n_queens(n)
 print_solution(solution)
 
 
