@@ -15,7 +15,7 @@ def AtLeastK(clauses, variables, start, k):
     # 1. X_i → R_{i,1}  ⇔  ¬X_i ∨ R_{i,1}
     for i in range(len(variables) - 1):
         clauses.append([-variables[i], extravariables[i][0]])
-
+        
     # 2. R_{i-1,j} → R_{i,j}  ⇔  ¬R_{i-1,j} ∨ R_{i,j}
     for i in range(1, len(variables) - 1):
         for j in range(min(i, k)):
