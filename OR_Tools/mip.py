@@ -1,4 +1,5 @@
 from ortools.linear_solver import pywraplp
+import time
 
 solver = pywraplp.Solver.CreateSolver("SCIP")
 
@@ -392,7 +393,7 @@ def validate_solution(wsd, wd, ms, as_, w, wm, E, D, S, MS, AS, Req, Abs,
     return errors
 
 status = solver.Solve()
-
+start_time = time.time()
 if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
     print("Found a solution!")
     for e in E:
@@ -401,7 +402,7 @@ if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
                 if wsd[e, s, d].solution_value() > 0.5:
                     print(f"{e} làm việc ở slot {s} ngày {d+1}")
     print("Total cost:", solver.Objective().Value())
-    print(f'Running time        : {solver.wall_time()/1000.0}')
+    print(f'Running time: {time.time() - start_time:.2f} seconds')
     errors = validate_solution(wsd, wd, ms, as_, w, wm, E, D, S, MS, AS, Req, Abs,
                                MinWe, MaxWe, MaxCWe, MaxCRe, MinCe, MaxCe, start, end)
 

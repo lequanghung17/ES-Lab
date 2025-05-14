@@ -1,44 +1,344 @@
-from docplex.mp.model import Model
+# from docplex.mp.model import Model
 
 # E = employees             # danh sách nhân viên
+# D = days                 # 0 đến 30
+# S = slot_indices         # 0 đến 7
+# MS = morning_slots       # ca sáng
+# AS = afternoon_slots     # ca chiều
+
+# mdl = Model("Employee Scheduling")
+
+# # Tập e, s, d đã được định nghĩa trước
+# ws = {(e, s, d): mdl.binary_var(name=f"ws_{e}_{s}_{d}") for e in E for s in S for d in D}
+# wd = {(e, d): mdl.binary_var(name=f"wd_{e}_{d}") for e in E for d in D}
+# ms = {(e, d): mdl.binary_var(name=f"ms_{e}_{d}") for e in E for d in D}
+# as_ = {(e, d): mdl.binary_var(name=f"as_{e}_{d}") for e in E for d in D}
+
+# # Ràng buộc 1: Nhu cầu lao động
+# for s in S:
+#     for d in D:
+#         mdl.add_constraint(mdl.sum(ws[e, s, d] for e in E) >= Req[s, d])
+
+# # Ràng buộc 2: ws -> wd
+# for e in E:
+#     for s in S:
+#         for d in D:
+#             mdl.add_constraint(ws[e, s, d] <= wd[e, d])
+
+# # Ràng buộc 6: ws -> ms hoặc as
+# for e in E:
+#     for d in D:
+#         for s in MS:
+#             mdl.add_constraint(ws[e, s, d] <= ms[e, d])
+#         for s in AS:
+#             mdl.add_constraint(ws[e, s, d] <= as_[e, d])
+
+# # Ràng buộc 7: Không làm sáng và chiều cùng lúc
+# for e in E:
+#     for d in D:
+#         mdl.add_constraint(ms[e, d] + as_[e, d] <= 1)
+
+# # Ràng buộc 5: Vắng mặt không làm
+# for (e, d), absent in Abse.items():
+#     if absent:
+#         mdl.add_constraint(wd[e, d] == 0)
+from docplex.mp.model import Model
+import os
+
+os.environ['PATH'] += r';C:\Program Files\IBM\ILOG\CPLEX_Studio_Community2212\cplex\bin\x64_win64'
+
+model = Model(name="EmployeeScheduling")
+slot_times = [
+    "07:00-09:00", "09:00-11:00", "11:00-13:00", "13:00-15:00",
+    "15:00-17:00", "17:00-19:00", "19:00-21:00", "21:00-24:00"
+]
+start = {}
+end = {}
+start[0] = 7*60
+start[1] = 9*60
+start[2] = 11*60
+start[3] = 13*60
+start[4] = 15*60
+start[5] = 17*60
+start[6] = 19*60
+start[7] = 21*60
+end[0] = 9*60
+end[1] = 11*60
+end[2] = 13*60
+end[3] = 15*60
+end[4] = 17*60
+end[5] = 19*60
+end[6] = 21*60
+end[7] = 24*60
+
+# start = {i: int(slot.split('-')[0].split(':')[0]) * 60 + int(slot.split('-')[0].split(':')[1]) for i, slot in enumerate(slot_times)}
+# end = {i: int(slot.split('-')[1].split(':')[0]) * 60 + int(slot.split('-')[1].split(':')[1]) for i, slot in enumerate(slot_times)}
+def mins(a):
+    return end[a] - start[a]
+
+
+
+num_slots = len(slot_times)
+slot_indices = list(range(num_slots)) # 0 đến 7
+
+num_days = 31
+days = list(range(num_days)) # 0 đến 30 (ánh xạ từ Ngày 1 đến Ngày 31)
+
+num_employees = 30
+employees = [f'emp{i+1}' for i in range(num_employees)]
+
+morning_slots = [0, 1, 2]
+afternoon_slots = [3, 4, 5, 6, 7]
+
+
+
+# --- Yêu cầu nhân viên (Req_sd) ---
+# Chuyển đổi đầu vào thành dictionary
+Req = {}
+req_data_text = """
+Ngày 1: 1, 3, 3, 1, 3, 2, 1, 1
+Ngày 2: 1, 3, 3, 1, 2, 3, 3, 2
+Ngày 3: 2, 2, 1, 2, 3, 2, 1, 2
+Ngày 4: 1, 2, 3, 2, 2, 2, 1, 3
+Ngày 5: 2, 2, 1, 1, 3, 2, 2, 1
+Ngày 6: 3, 3, 2, 1, 2, 3, 2, 3
+Ngày 7: 1, 3, 2, 2, 3, 1, 1, 2
+Ngày 8: 3, 2, 2, 3, 1, 3, 3, 3
+Ngày 9: 2, 2, 1, 3, 2, 1, 2, 1
+Ngày 10: 1, 1, 1, 3, 1, 3, 3, 3
+Ngày 11: 1, 3, 3, 2, 3, 3, 2, 3
+Ngày 12: 3, 3, 1, 2, 2, 2, 1, 3
+Ngày 13: 1, 2, 3, 1, 3, 2, 3, 2
+Ngày 14: 1, 1, 2, 1, 3, 3, 3, 2
+Ngày 15: 1, 2, 1, 1, 2, 3, 2, 2
+Ngày 16: 1, 3, 3, 2, 2, 2, 3, 1
+Ngày 17: 3, 1, 3, 1, 3, 2, 1, 1
+Ngày 18: 3, 1, 1, 2, 1, 3, 2, 2
+Ngày 19: 2, 2, 3, 1, 1, 2, 2, 3
+Ngày 20: 2, 2, 3, 3, 1, 3, 3, 1
+Ngày 21: 1, 3, 1, 3, 2, 1, 1, 1
+Ngày 22: 3, 2, 1, 3, 2, 2, 3, 3
+Ngày 23: 1, 1, 3, 3, 3, 2, 3, 1
+Ngày 24: 3, 2, 2, 2, 3, 1, 2, 2
+Ngày 25: 1, 2, 1, 1, 1, 1, 2, 2
+Ngày 26: 3, 1, 1, 2, 1, 1, 2, 1
+Ngày 27: 3, 1, 2, 1, 1, 3, 2, 2
+Ngày 28: 2, 2, 1, 2, 3, 2, 2, 3
+Ngày 29: 3, 1, 2, 1, 3, 2, 1, 2
+Ngày 30: 1, 2, 2, 1, 3, 3, 1, 2
+Ngày 31: 3, 2, 3, 1, 1, 1, 1, 3
+"""
+lines = req_data_text.strip().split('\n')
+for i, line in enumerate(lines):
+    day_index = i
+    parts = line.split(':')
+    counts = [int(c.strip()) for c in parts[1].split(',')]
+    for slot_index, count in enumerate(counts):
+        Req[(day_index, slot_index)] = count
+
+# --- Thuộc tính nhân viên (Ràng buộc cá nhân) ---
+# emp_props_data = {
+#     'emp1': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 2},
+#     'emp2': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 2},
+#     'emp3': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
+#     'emp4': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
+#     'emp5': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 5, 'MaxCRe': 3},
+#     'emp6': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 3},
+#     'emp7': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 7, 'MaxCRe': 4},
+#     'emp8': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
+#     'emp9': {'MaxWe': 3, 'MinCe': 1, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 3},
+#     'emp10': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
+#     'emp11': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 7, 'MaxCRe': 4},
+#     'emp12': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 4, 'MaxCRe': 4},
+#     'emp13': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 6, 'MaxCRe': 2},
+#     'emp14': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 6, 'MaxCRe': 2},
+#     'emp15': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 7, 'MaxCRe': 2},
+#     'emp16': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
+#     'emp17': {'MaxWe': 3, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
+#     'emp18': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
+#     'emp19': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 6, 'MaxCRe': 2},
+#     'emp20': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 4},
+#     'emp21': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 4, 'MaxCRe': 4},
+#     'emp22': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 4, 'MaxCRe': 3},
+#     'emp23': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 5, 'MaxCRe': 2},
+#     'emp24': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 5, 'MaxCRe': 3},
+#     'emp25': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
+#     'emp26': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 7, 'MaxCRe': 2},
+#     'emp27': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 4, 'MaxCRe': 3},
+#     'emp28': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
+#     'emp29': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 4, 'MaxCRe': 3},
+#     'emp30': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 5, 'MaxCWe': 5, 'MaxCRe': 4}
+# }
+# #(Absed)
+Abs = {
+    'emp1': ['0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '1'],
+    'emp2': ['0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0'],
+    'emp3': ['0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0'],
+    'emp4': ['0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0'],
+    'emp5': ['0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1'],
+    'emp6': ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '1', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0'],
+    'emp7': ['1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0'],
+    'emp8': ['1', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '1', '1', '0', '0'],
+    'emp9': ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '1', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0'],
+    'emp10': ['1', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '0'],
+    'emp11': ['1', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0'],
+    'emp12': ['0', '0', '1', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0'],
+    'emp13': ['0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '1', '1', '1', '0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '0', '0'],
+    'emp14': ['0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0'],
+    'emp15': ['0', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '0', '1', '0', '1', '1', '0', '0', '0'],
+    'emp16': ['1', '1', '1', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '1', '0'],
+    'emp17': ['1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0'],
+    'emp18': ['0', '0', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1'],
+    'emp19': ['0', '1', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0', '1'],
+    'emp20': ['0', '0', '1', '0', '0', '0', '0', '1', '1', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '0', '0'],
+    'emp21': ['0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '0', '1', '0', '0', '1', '0', '0', '0', '0', '0', '1'],
+    'emp22': ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '0'],
+    'emp23': ['0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '1'],
+    'emp24': ['0', '0', '0', '1', '0', '1', '0', '0', '1', '0', '1', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0'],
+    'emp25': ['0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0', '1', '1', '0'],
+    'emp26': ['0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '1', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '0'],
+    'emp27': ['1', '0', '0', '0', '0', '0', '0', '1', '0', '1', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '1', '0'],
+    'emp28': ['0', '1', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0'],
+    'emp29': ['0', '0', '1', '0', '0', '1', '0', '0', '1', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '1', '1'],
+    'emp30': ['0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '1', '1', '0', '0', '0', '0', '0', '1', '0']
+}
+
+Per = 5
+MaxD = 3
+MaxWe = 4*60
+MinWe = 2*60
+MaxPe = 6*60
+MinCe = 2*60
+MaxCe = 5*60
+MaxCWe = 7
+MaxCRe = 5
+We = 5000
+WMem = 1000
+
+E = employees             # danh sách nhân viên
 D = days                 # 0 đến 30
-S = slot_indices         # 0 đến 7
+S = slot_indices  # 0 đến 7
+M = [1]    
 MS = morning_slots       # ca sáng
 AS = afternoon_slots     # ca chiều
 
-mdl = Model("Employee Scheduling")
+wsd = {}
+wd = {}
+ms = {}
+as_ = {}
+wm = {}
+w = {}
 
-# Tập e, s, d đã được định nghĩa trước
-ws = {(e, s, d): mdl.binary_var(name=f"ws_{e}_{s}_{d}") for e in E for s in S for d in D}
-wd = {(e, d): mdl.binary_var(name=f"wd_{e}_{d}") for e in E for d in D}
-ms = {(e, d): mdl.binary_var(name=f"ms_{e}_{d}") for e in E for d in D}
-as_ = {(e, d): mdl.binary_var(name=f"as_{e}_{d}") for e in E for d in D}
 
-# Ràng buộc 1: Nhu cầu lao động
+# Variables
+wsd = {(e, s, d): model.binary_var(name=f"wsd_{e}_{s}_{d}") for e in E for s in S for d in D}
+wd = {(e, d): model.binary_var(name=f"wd_{e}_{d}") for e in E for d in D}
+ms = {(e, d): model.binary_var(name=f"ms_{e}_{d}") for e in E for d in D}
+as_ = {(e, d): model.binary_var(name=f"as_{e}_{d}") for e in E for d in D}
+w = {e: model.binary_var(name=f"w_{e}") for e in E}
+wm = {(e, m): model.binary_var(name=f"wm_{e}_1") for e in E for m in M}
+
+# Objective
+model.minimize(model.sum(We * w[e] for e in E) + model.sum(WMem * wm[e, 1] for e in E))
+
+# Constraint 1: Đáp ứng yêu cầu từng slot trong ngày
 for s in S:
     for d in D:
-        mdl.add_constraint(mdl.sum(ws[e, s, d] for e in E) >= Req[s, d])
+        model.add_constraint(model.sum(wsd[e, s, d] for e in E) >= Req.get((d, s), 0))
 
-# Ràng buộc 2: ws -> wd
+# Constraint 2: wsd -> wd
 for e in E:
     for s in S:
         for d in D:
-            mdl.add_constraint(ws[e, s, d] <= wd[e, d])
+            model.add_constraint(wsd[e, s, d] <= wd[e, d])
 
-# Ràng buộc 6: ws -> ms hoặc as
+# Constraint 3: wd -> wm
 for e in E:
     for d in D:
+        model.add_constraint(wd[e, d] <= wm[e, 1])
+
+# Constraint 4: wm -> w
+for e in E:
+    for m in M:
+        model.add_constraint(wm[e, m] <= w[e])
+
+# Constraint 5: Vắng mặt
+for e in E:
+    for d in D:
+        if Abs[e][d] == '1':
+            model.add_constraint(wd[e, d] == 0)
+
+# Constraint 6, 7: Sáng/Chiều và mapping wsd -> ms, as_
+for e in E:
+    for d in D:
+        model.add_constraint(ms[e, d] + as_[e, d] <= 1)
         for s in MS:
-            mdl.add_constraint(ws[e, s, d] <= ms[e, d])
+            model.add_constraint(wsd[e, s, d] <= ms[e, d])
         for s in AS:
-            mdl.add_constraint(ws[e, s, d] <= as_[e, d])
+            model.add_constraint(wsd[e, s, d] <= as_[e, d])
 
-# Ràng buộc 7: Không làm sáng và chiều cùng lúc
+# Constraint 9, 10: Giới hạn lệch sáng chiều trong chuỗi ngày
+for e in E:
+    for d_start in range(num_days - Per + 1):
+        expr = model.sum(ms[e, d] - as_[e, d] for d in range(d_start, d_start + Per))
+        model.add_constraint(expr <= MaxD)
+        model.add_constraint(expr >= -MaxD)
+
+# Constraint 11 & 12: Khoảng cách giữa các ca cùng buổi
 for e in E:
     for d in D:
-        mdl.add_constraint(ms[e, d] + as_[e, d] <= 1)
+        for s1 in S:
+            for s2 in S:
+                if s1 < s2 and (end[s2] - start[s1]) > MaxPe:
+                    if (s1 in MS and s2 in MS) or (s1 in AS and s2 in AS):
+                        model.add_constraint(wsd[e, s1, d] + wsd[e, s2, d] <= 1)
 
-# Ràng buộc 5: Vắng mặt không làm
-for (e, d), absent in Abse.items():
-    if absent:
-        mdl.add_constraint(wd[e, d] == 0)
+# Constraint 13 & 14: Tổng phút ca sáng/chiều không quá MaxWe
+for e in E:
+    for d in D:
+        model.add_constraint(model.sum(mins(s) * wsd[e, s, d] for s in MS) <= MaxWe)
+        model.add_constraint(model.sum(mins(s) * wsd[e, s, d] for s in AS) <= MaxWe)
+
+# Constraint 15: Nếu đi làm thì phải đạt MinWe
+for e in E:
+    for d in D:
+        model.add_constraint(model.sum(mins(s) * wsd[e, s, d] for s in S) >= MinWe * wd[e, d])
+
+# Constraint 16: Không làm 3 ca quá sát nhau
+for e in E:
+    for d in D:
+        for s1 in S:
+            for s2 in S:
+                for s3 in S:
+                    if end[s1] == start[s2] and end[s2] <= start[s3] and (start[s3] - start[s2] < MinCe):
+                        model.add_constraint(wsd[e, s1, d] - wsd[e, s2, d] + wsd[e, s3, d] >= 0)
+
+# Constraint 17: Không quá MaxCe slot liên tiếp trong ngày
+for e in E:
+    for d in D:
+        for s in range(num_slots - MaxCe):
+            model.add_constraint(model.sum(wsd[e, s+k, d] for k in range(MaxCe + 1)) <= MaxCe)
+
+# Constraint 18: Không làm quá MaxCWe ngày liên tiếp
+for e in E:
+    for d_start in range(num_days - MaxCWe):
+        model.add_constraint(model.sum(wd[e, d] for d in range(d_start, d_start + MaxCWe + 1)) <= MaxCWe)
+
+# Constraint 19: Không nghỉ quá MaxCRe ngày liên tiếp
+for e in E:
+    for d_start in range(num_days - MaxCRe):
+        model.add_constraint(model.sum(wd[e, d] for d in range(d_start, d_start + MaxCRe + 1)) >= 1)
+
+# Solve model
+solution = model.solve(log_output=True)
+
+if solution:
+    print("Solution found.")
+    for e in E:
+        for d in D:
+            for s in S:
+                if wsd[e, s, d].solution_value > 0.5:
+                    print(f"{e} works slot {s} on day {d+1}")
+    print("Total cost:", model.objective_value)
+else:
+    print("No solution found.")

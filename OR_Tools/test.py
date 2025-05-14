@@ -12,7 +12,7 @@
 # print("x =", solver.Value(x))
 # print("y =", solver.Value(y))
 
-from ortools.linear_solver import pywraplp
+from ortools.linear_solver import pywraplp # MIP
 
 
 def main():
@@ -58,3 +58,32 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+#     from ortools.sat.python import cp_model # CP
+
+# model = cp_model.CpModel()
+
+# # Biến nguyên không âm
+# x = model.NewIntVar(0, 100000, "x")
+
+# # Biến nhị phân
+# y = model.NewBoolVar("y")
+
+# # Một mảng biến nguyên
+# z = [model.NewIntVar(0, 10, f"z_{i}") for i in range(5)]
+
+# # Ràng buộc
+# model.Add(x + sum(z) <= 100)
+
+# # Mục tiêu
+# model.Maximize(x + y)
+
+# # Giải
+# solver = cp_model.CpSolver()
+# status = solver.Solve(model)
+
+# if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+#     print("x =", solver.Value(x))
+#     print("y =", solver.Value(y))
+#     print("z =", [solver.Value(v) for v in z])
