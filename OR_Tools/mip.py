@@ -299,7 +299,7 @@ for e in E:
             for K in range(1, K_max + 1):
                 if end[s + K_max - 1] - start[s] <= max_consec_slots < end[s+K_max] - start[s]:
                     window_vars = [wsd[e, s+k, d] for k in range(K+1)]
-                    solver.Add(solver.Sum(window_vars) <= max_consec_slots) 
+                    solver.Add(solver.Sum(window_vars) <= K) 
             
 #cstr18
 for e in E:

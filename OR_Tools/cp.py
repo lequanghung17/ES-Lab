@@ -92,40 +92,6 @@ for i, line in enumerate(lines):
     for slot_index, count in enumerate(counts):
         Req[(day_index, slot_index)] = count
 
-# --- Thuộc tính nhân viên (Ràng buộc cá nhân) ---
-# emp_props_data = {
-#     'emp1': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 2},
-#     'emp2': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 2},
-#     'emp3': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
-#     'emp4': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
-#     'emp5': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 5, 'MaxCRe': 3},
-#     'emp6': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 3},
-#     'emp7': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 7, 'MaxCRe': 4},
-#     'emp8': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
-#     'emp9': {'MaxWe': 3, 'MinCe': 1, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 3},
-#     'emp10': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
-#     'emp11': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 7, 'MaxCRe': 4},
-#     'emp12': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 4, 'MaxCRe': 4},
-#     'emp13': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 6, 'MaxCRe': 2},
-#     'emp14': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 6, 'MaxCRe': 2},
-#     'emp15': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 7, 'MaxCRe': 2},
-#     'emp16': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
-#     'emp17': {'MaxWe': 3, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
-#     'emp18': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
-#     'emp19': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 6, 'MaxCRe': 2},
-#     'emp20': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 6, 'MaxCRe': 4},
-#     'emp21': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 4, 'MaxCRe': 4},
-#     'emp22': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 4, 'MaxCRe': 3},
-#     'emp23': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 5, 'MaxCRe': 2},
-#     'emp24': {'MaxWe': 3, 'MinCe': 2, 'MaxCe': 5, 'MaxCWe': 5, 'MaxCRe': 3},
-#     'emp25': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 3},
-#     'emp26': {'MaxWe': 2, 'MinCe': 2, 'MaxCe': 3, 'MaxCWe': 7, 'MaxCRe': 2},
-#     'emp27': {'MaxWe': 1, 'MinCe': 1, 'MaxCe': 4, 'MaxCWe': 4, 'MaxCRe': 3},
-#     'emp28': {'MaxWe': 1, 'MinCe': 2, 'MaxCe': 4, 'MaxCWe': 5, 'MaxCRe': 4},
-#     'emp29': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 3, 'MaxCWe': 4, 'MaxCRe': 3},
-#     'emp30': {'MaxWe': 2, 'MinCe': 1, 'MaxCe': 5, 'MaxCWe': 5, 'MaxCRe': 4}
-# }
-# #(Absed)
 Abs = {
     'emp1': ['0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '1', '0', '0', '1'],
     'emp2': ['0', '0', '0', '0', '1', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1', '0'],
